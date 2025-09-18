@@ -1,235 +1,212 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPhone Calculator</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe vs Computer</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      font-family: "Poppins", sans-serif;
+    }
+
+    .container {
+      width: 95vw;
+      max-width: 420px;
+      text-align: center;
+      padding: 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      font-weight: 700;
+      background: linear-gradient(90deg, #ff6f61, #fddb92);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      margin-bottom: 20px;
+    }
+
+    .cell {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: clamp(2.5rem, 12vw, 4rem);
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      user-select: none;
+      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.25s ease;
+    }
+
+    .cell:hover {
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .cell.X {
+      color: #ff6f61;
+      text-shadow: 0 0 15px #ff6f61;
+    }
+
+    .cell.O {
+      color: #66ffb2;
+      text-shadow: 0 0 15px #66ffb2;
+    }
+
+    .status {
+      margin-bottom: 15px;
+      font-size: clamp(1rem, 5vw, 1.4rem);
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .btn {
+      padding: 12px 25px;
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #ff6f61, #ff9966);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      background: linear-gradient(90deg, #ff4c3b, #ff8050);
+    }
+  </style>
 </head>
 <body>
-    <div class="calculator">
-        <!-- 3-Dot History Button (Bilkul Top Per) -->
-        <div class="history-btn" onclick="toggleHistory()">⋮</div>
+  <div class="container">
+    <h1>Tic-Tac-Toe 🤖</h1>
+    <div class="board" id="board"></div>
+    <div class="status" id="status">Your turn (X)</div>
+    <button class="btn" onclick="resetGame()">🔄 Restart Game</button>
+  </div>
 
-        <!-- Display Section -->
-        <div class="display">
-            <div class="previous-value" id="prev-value"></div>
-            <div class="current-value" id="curr-value">0</div>
-        </div>
+  <script>
+    const board = document.getElementById("board");
+    const statusText = document.getElementById("status");
+    let cells = [];
+    let currentPlayer = "X"; // User always X
+    let gameActive = true;
 
-        <!-- History Panel -->
-        <div class="history-panel" id="history-panel">
-            <h3>History</h3>
-            <ul id="history-list"></ul>
-        </div>
+    function createBoard() {
+      board.innerHTML = "";
+      cells = [];
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.addEventListener("click", () => handleClick(i));
+        board.appendChild(cell);
+        cells.push(cell);
+      }
+    }
 
-        <!-- Buttons -->
-        <div class="buttons">
-            <button class="btn gray" onclick="clearDisplay()">AC</button>
-            <button class="btn gray" onclick="invertSign()">+/-</button>
-            <button class="btn gray" onclick="percentage()">%</button>
-            <button class="btn orange" onclick="operator('/')">÷</button>
+    function handleClick(index) {
+      if (!gameActive || cells[index].textContent !== "" || currentPlayer !== "X") return;
 
-            <button class="btn black" onclick="appendNumber('7')">7</button>
-            <button class="btn black" onclick="appendNumber('8')">8</button>
-            <button class="btn black" onclick="appendNumber('9')">9</button>
-            <button class="btn orange" onclick="operator('*')">×</button>
+      cells[index].textContent = "X";
+      cells[index].classList.add("X");
 
-            <button class="btn black" onclick="appendNumber('4')">4</button>
-            <button class="btn black" onclick="appendNumber('5')">5</button>
-            <button class="btn black" onclick="appendNumber('6')">6</button>
-            <button class="btn orange" onclick="operator('-')">−</button>
+      if (checkWinner("X")) {
+        statusText.textContent = `🎉 You win!`;
+        gameActive = false;
+        return;
+      }
 
-            <button class="btn black" onclick="appendNumber('1')">1</button>
-            <button class="btn black" onclick="appendNumber('2')">2</button>
-            <button class="btn black" onclick="appendNumber('3')">3</button>
-            <button class="btn orange" onclick="operator('+')">+</button>
+      if (cells.every(cell => cell.textContent !== "")) {
+        statusText.textContent = "🤝 It's a Draw!";
+        gameActive = false;
+        return;
+      }
 
-            <button class="btn black zero-btn" onclick="appendNumber('0')">0</button>
-            <button class="btn black" onclick="appendNumber('.')">.</button>
-            <button class="btn orange" onclick="calculateResult()">=</button>
-        </div>
-    </div>
+      currentPlayer = "O";
+      statusText.textContent = "Computer's turn...";
 
-    <script src="script.js"></script>
+      setTimeout(computerMove, 600); // delay for realism
+    }
+
+    function computerMove() {
+      if (!gameActive) return;
+
+      // Simple AI: choose random empty cell
+      const emptyCells = cells
+        .map((cell, i) => (cell.textContent === "" ? i : null))
+        .filter(i => i !== null);
+
+      if (emptyCells.length === 0) return;
+
+      const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      cells[randomIndex].textContent = "O";
+      cells[randomIndex].classList.add("O");
+
+      if (checkWinner("O")) {
+        statusText.textContent = `🤖 Computer wins!`;
+        gameActive = false;
+        return;
+      }
+
+      if (cells.every(cell => cell.textContent !== "")) {
+        statusText.textContent = "🤝 It's a Draw!";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = "X";
+      statusText.textContent = "Your turn (X)";
+    }
+
+    function checkWinner(player) {
+      const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+
+      return winPatterns.some(pattern => {
+        const [a, b, c] = pattern;
+        return (
+          cells[a].textContent === player &&
+          cells[b].textContent === player &&
+          cells[c].textContent === player
+        );
+      });
+    }
+
+    function resetGame() {
+      currentPlayer = "X";
+      gameActive = true;
+      statusText.textContent = "Your turn (X)";
+      createBoard();
+    }
+
+    createBoard();
+  </script>
 </body>
-</html><style>body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: black;
-    font-family: Arial, sans-serif;
-}
-
-.calculator {
-    width: 300px;
-    background-color: black;
-    border-radius: 20px;
-    padding: 20px;
-    position: relative;
-}
-
-/* 3-Dot History Button (Bilkul Top Pe) */
-.history-btn {
-    position: absolute;
-    top: 5px;
-    left: 10px;
-    font-size: 20px;
-    color: orange;
-    cursor: pointer;
-}
-
-/* Display Screen */
-.display {
-    text-align: right;
-    color: white;
-    padding: 10px;
-    font-size: 30px;
-}
-
-.previous-value {
-    font-size: 20px;
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.current-value {
-    font-size: 40px;
-    font-weight: bold;
-}
-
-/* History Panel */
-.history-panel {
-    display: none;
-    position: absolute;
-    top: 40px;
-    left: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 10px;
-    width: 120px;
-    color: white;
-    font-size: 14px;
-}
-
-.history-panel h3 {
-    margin: 0;
-    font-size: 16px;
-}
-
-.history-panel ul {
-    list-style: none;
-    padding: 0;
-    max-height: 100px;
-    overflow-y: auto;
-}
-
-.buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-top: 100px;
-}
-
-.btn {
-    width: 60px;
-    height: 70px;
-    border-radius: 50%;
-    border: none;
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.gray {
-    background-color: #A5A5A5;
-    color: black;
-}
-
-.orange {
-    background-color: #FF9500;
-    color: white;
-}
-
-.black {
-    background-color: #333;
-    color: white;
-}
-
-/* Zero Button */
-.zero-btn {
-    grid-column: span 2;
-    width: 130px;
-    border-radius: 30px;
-}
-
-.btn:active {
-    opacity: 0.7;
-}</style><script>let currExpression = "";
-const currDisplay = document.getElementById("curr-value");
-const historyPanel = document.getElementById("history-panel");
-const historyList = document.getElementById("history-list");
-
-function appendNumber(number) {
-    currExpression += number;
-    updateDisplay();
-}
-
-function updateDisplay() {
-    currDisplay.textContent = currExpression || "0";
-}
-
-function clearDisplay() {
-    currExpression = "";
-    updateDisplay();
-}
-
-function operator(op) {
-    if (currExpression === "") return;
-    const lastChar = currExpression[currExpression.length - 1];
-    
-    if (["+", "-", "*", "/"].includes(lastChar)) {
-        currExpression = currExpression.slice(0, -1) + op;
-    } else {
-        currExpression += op;
-    }
-
-    updateDisplay();
-}
-
-function calculateResult() {
-    try {
-        let result = eval(currExpression).toString();
-        saveToHistory(currExpression + " = " + result);
-        currExpression = result;
-        updateDisplay();
-    } catch (error) {
-        currExpression = "";
-        updateDisplay();
-    }
-}
-
-function invertSign() {
-    if (currExpression === "") return;
-    currExpression = `(${currExpression} * -1)`;
-    updateDisplay();
-}
-
-function percentage() {
-    if (currExpression === "") return;
-    currExpression = `(${currExpression} / 100)`;
-    updateDisplay();
-}
-
-/* History Toggle */
-function toggleHistory() {
-    historyPanel.style.display = historyPanel.style.display === "block" ? "none" : "block";
-}
-
-/* Save Calculation to History */
-function saveToHistory(entry) {
-    let listItem = document.createElement("li");
-    listItem.textContent = entry;
-    historyList.appendChild(listItem);
-}</script>
+</html>
